@@ -23,14 +23,33 @@ std::stack<Position> valid_positions;
 // Função para carregar o labirinto de um arquivo
 Position load_maze(const std::string& file_name) {
     // TODO: Implemente esta função seguindo estes passos:
-    // 1. Abra o arquivo especificado por file_name usando std::ifstream
-    // 2. Leia o número de linhas e colunas do labirinto
+
     // 3. Redimensione a matriz 'maze' de acordo (use maze.resize())
     // 4. Leia o conteúdo do labirinto do arquivo, caractere por caractere
     // 5. Encontre e retorne a posição inicial ('e')
     // 6. Trate possíveis erros (arquivo não encontrado, formato inválido, etc.)
-    // 7. Feche o arquivo após a leitura
+    // 7. Feche o arquivo após a leitura VVVVVVVVVVVVVVVVVVVVVVVV
+    std::ifstream arquivo(file_name);
+    if (arquivo.is_open()){
+        std::cout << "arquivo aberto" << std::endl;
+    }else {
+        std::cout << "arquivo não encontrado" << std::endl;
+    }
     
+    if (arquivo >> num_rows >> num_cols) {
+       std::cout << "Linhas: " << num_rows << ", Colunas: " << num_cols << std::endl;
+    }
+    maze.resize(num_rows, std::vector<char>(num_cols));
+    std::cout << "tamanho labirinto" << maze.size() << std::endl;
+
+    std::cout << "blabla" << maze[1] << std::endl;
+
+    arquivo.close();
+    if (!arquivo.is_open()){
+        std::cout << "arquivo fechado" << std::endl;
+    }else {
+        std::cout << "arquivo não encontrado" << std::endl;
+    }
     return {-1, -1}; // Placeholder - substitua pelo valor correto
 }
 
