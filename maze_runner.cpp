@@ -56,43 +56,49 @@ void print_maze() {
     }
 }
 
-bool is_valid_position(int row, int col) {
-    return (row >= 0 && row < num_rows && col >= 0 && col < num_cols && maze[row][col] == 'x');
-}
+bool is_valid_position(int row, int col);
+
 
 bool walk(Position pos) {
-    maze[pos.row][pos.col] = '.';
-    print_maze();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
     if (maze[pos.row][pos.col] == 's') {
-        return true;
+        return true;  
     }
 
    
+    maze[pos.row][pos.col] = '.';  
+    print_maze();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    // Definindo as direções: cima, baixo, esquerda, direita
     Position directions[] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; 
+
     for (const auto& dir : directions) {
         int new_row = pos.row + dir.row;
         int new_col = pos.col + dir.col;
 
+        // Certifique-se de que a nova posição está dentro dos limites e que não foi visitada
         if (is_valid_position(new_row, new_col)) {
             valid_positions.push({new_row, new_col});
         }
     }
 
-    
+    // Enquanto houver posições válidas na pilha
     while (!valid_positions.empty()) {
         Position next_pos = valid_positions.top();
         valid_positions.pop();
 
-       
+        // Chamar a função walk recursivamente para explorar novas posições
         if (walk(next_pos)) {
-            return true; 
+            return true;  // Se encontrar a saída, retorne true
         }
     }
 
-    return false;
+    return false;  // Não encontrou a saída
+}
+
+bool is_valid_position(int row, int col) {
+    
+    return (row >= 0 && row < num_rows && col >= 0 && col < num_cols && (maze[row][col] == 'x' || maze[row][col] == 's'));
 }
 
 
@@ -104,16 +110,16 @@ int main(int argc, char* argv[]) {
 
     Position initial_pos = load_maze(argv[1]);
     if (initial_pos.row == -1 || initial_pos.col == -1) {
-        std::cerr << "Posição inicial não encontrada no labirinto." << std::endl;
+        std::cerr << "Posicao inicial não encontrada no labirinto." << std::endl;
         return 1;
     }
 
     bool exit_found = walk(initial_pos);
 
     if (exit_found) {
-        std::cout << "Saída encontrada!" << std::endl;
+        std::cout << "Saida encontrada!" << std::endl;
     } else {
-        std::cout << "Não foi possível encontrar a saída." << std::endl;
+        std::cout << "Nao foi possível encontrar a saida." << std::endl;
     }
 
     return 0;
