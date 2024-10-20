@@ -6,23 +6,20 @@
 #include <chrono>
 #include <mutex>
 #include <atomic>
-#include <stdexcept>  // Para capturar exceções
+#include <stdexcept>  
 
-// Representação do labirinto
 using Maze = std::vector<std::vector<char>>;
 
-// Estrutura para representar uma posição no labirinto
 struct Position {
     int row;
     int col;
 };
 
-// Variáveis globais
 Maze maze;
 int num_rows;
 int num_cols;
-std::mutex maze_mutex;  // Mutex para proteger o labirinto
-std::atomic<bool> exit_found(false);  // Variável para sinalizar se a saída foi encontrada
+std::mutex maze_mutex;  
+std::atomic<bool> exit_found(false);  
 
 Position load_maze(const std::string& file_name) {
     std::ifstream arquivo(file_name);
@@ -49,7 +46,7 @@ Position load_maze(const std::string& file_name) {
 }
 
 void print_maze() {
-    std::lock_guard<std::mutex> lock(maze_mutex);  // Protege a impressão
+    std::lock_guard<std::mutex> lock(maze_mutex); 
     for (const auto& row : maze) {
         for (char cell : row) {
             std::cout << cell;
@@ -60,69 +57,72 @@ void print_maze() {
 }
 
 bool is_valid_position(int row, int col) {
-    // Verifica se a posição está dentro do labirinto e se é válida para caminhar
-    std::lock_guard<std::mutex> lock(maze_mutex);  // Protege o acesso ao labirinto durante a verificação
+    std::lock_guard<std::mutex> lock(maze_mutex); 
     return (row >= 0 && row < num_rows && col >= 0 && col < num_cols && (maze[row][col] == 'x' || maze[row][col] == 's'));
 }
 
 bool walk(Position pos) {
-    try {
-        std::stack<Position> valid_positions;
+      try {
+          std::stack<Position> valid_positions;
 
-        // Se a saída já foi encontrada por outra thread, esta thread retorna
-        if (exit_found) {
+
+         if (exit_found) {
             return false;
         }
 
-        if (maze[pos.row][pos.col] == 's') {
-            // Marca que a saída foi encontrada
+          if (maze[pos.row][pos.col] == 's') {
+           
             exit_found = true;
             return true;
         }
 
         {
-            std::lock_guard<std::mutex> lock(maze_mutex);  // Protege a marcação do labirinto
-            maze[pos.row][pos.col] = '.';  // Marca o caminho percorrido
-        }
+            std::lock_guard<std::mutex> lock(maze_mutex); 
+            maze[pos.row][pos.col] = '.';  
+            }
 
-        // Imprime o labirinto com uma pausa para visualização
+        
         print_maze();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));  // Pausa ajustada para 500 ms
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));  
 
-        // Definindo as direções: cima, baixo, esquerda, direita
         Position directions[] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
         std::vector<Position> new_positions;
 
-        for (const auto& dir : directions) {
-            int new_row = pos.row + dir.row;
-            int new_col = pos.col + dir.col;
+          for (const auto& dir : directions) {
+              int new_row = pos.row + dir.row;
+              int new_col = pos.col + dir.col;
 
-            if (is_valid_position(new_row, new_col)) {
+               if (is_valid_position(new_row, new_col)) {
                 new_positions.push_back({new_row, new_col});
-            }
-        }
+              }
+          }
 
-        if (new_positions.size() > 1) {
-            std::vector<std::thread> threads;
 
-            // Cria uma thread para cada caminho adicional
-            for (size_t i = 1; i < new_positions.size(); ++i) {
-                threads.emplace_back(walk, new_positions[i]);
-            }
+          if (new_positions.size() > 1) {
+             std::vector<std::thread> threads;
 
-            // A thread principal continua a explorar o primeiro caminho
+           
+
+
+              for (size_t i = 1; i < new_positions.size(); ++i) {
+                 threads.emplace_back(walk, new_positions[i]);
+             }
+
+            
+            
+
             if (walk(new_positions[0])) {
                 return true;
             }
 
-            // Espera as threads filhas terminarem
+           
             for (auto& t : threads) {
                 if (t.joinable()) {
                     t.join();
                 }
             }
         } else if (!new_positions.empty()) {
-            // Continua explorando o único caminho disponível
+           
             if (walk(new_positions[0])) {
                 return true;
             }
@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
 
     if (exit_found_by_thread || exit_found) {
         std::cout << "Saída encontrada!" << std::endl;
-        print_maze();  // Apenas a thread que encontrou a saída imprime o labirinto
+        print_maze(); 
     } else {
         std::cout << "Não foi possível encontrar a saída." << std::endl;
     }
